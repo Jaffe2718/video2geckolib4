@@ -5,31 +5,30 @@ import cv2
 import importlib.resources as pkg_resources
 
 from .animation_unit import AnimationBuilder, AnimationSet
-from .pose_estimator import VideoPoseEstimator
+from .pose_estimator import PoseEstimator
 from .pose_converter import PoseConverter, BONES
 
-__version__ = '0.1.0'
-__all__ = ['VideoPoseEstimator', 'PoseConverter', 'AnimationBuilder', 'AnimationSet', 'BONES', "auto_estimate"]
+__all__ = ['PoseEstimator', 'PoseConverter', 'AnimationBuilder', 'AnimationSet', 'BONES', "auto_build_animations"]
 
 
-def auto_estimate(videos: Iterable[str | Path],
-                  out_json: str | Path,
-                  sample_fps: float = 20.0,
-                  model_complexity: Literal[0, 1, 2] = 1,
-                  smooth: bool = True,
-                  allow_translate: bool = False):
+def auto_build_animations(videos: Iterable[str | Path],
+                          out_json: str | Path,
+                          sample_fps: float = 20.0,
+                          model_complexity: Literal[0, 1, 2] = 1,
+                          smooth: bool = True,
+                          allow_translate: bool = False):
     """
-    Estimate pose for all videos and merge them into a single animation json file, each video will be converted into a
+    Estimate pose for all videos and merge them into a single GeckoLib4 animation json file, each video will be converted into a
      single animation which will be named same as the video file basename
-    :param videos:  to video file
-    :param out_json:  to output json file
-    :param sample_fps:  frame rate to sample
-    :param model_complexity:  0 for lite model, 1 for full model, 2 for heavy model
+    :param videos: list of video paths
+    :param out_json: to output json file
+    :param sample_fps: frame rate to sample
+    :param model_complexity: 0 for lite model, 1 for full model, 2 for heavy model
     :param smooth: whether to smooth pose estimation result
     :param allow_translate: allow model to do translation in animation json
     """
     animation_set = AnimationSet()
-    vpe = VideoPoseEstimator(model_complexity=model_complexity)
+    vpe = PoseEstimator(model_complexity=model_complexity)
     for vpath in videos:
         # open video
         cap = cv2.VideoCapture(vpath)
@@ -51,7 +50,7 @@ def auto_estimate(videos: Iterable[str | Path],
 
 def gen_basemodel(out: str | Path):
     """
-    copy base model to given path
+    Copy base model to given path
     :param out:  to output directory
     """
     bbmodel = pkg_resources.files('video2geckolib4') / 'basemodel.bbmodel'

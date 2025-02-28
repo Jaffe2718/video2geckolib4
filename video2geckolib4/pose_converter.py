@@ -112,6 +112,7 @@ class PoseConverter:
         head_y = np.cross(head_z, head_x)
         head_sys = np.vstack([_normalize(head_x), _normalize(head_y), _normalize(head_z)]).T
         ans["Head"] = _euler_angles(_rel(body_sys, head_sys))
+        ans["Head"][0] = -ans["Head"][0]
 
         # LeftUpperArm (rel to Body)
         left_upper_arm_y = _v(lm, 13, 11)
@@ -192,7 +193,7 @@ class PoseConverter:
     @staticmethod
     def calculate_poses(landmark_frames: Iterable[NamedTuple], smooth: bool = True) -> List[Dict[str, List[float]]]:
         """
-        calculate rotation angles for all frames
+        Calculate rotation angles for all frames
         :param landmark_frames: an iterable of namedtuple objects, each object contains the pose landmarks of a frame
         :param smooth: whether to smooth the rotation angles
         :return: a list of rotation angles dictionary (keys are BONES)
@@ -209,7 +210,7 @@ class PoseConverter:
     @staticmethod
     def statistic_skeleton(landmark_frames: Iterable[NamedTuple]) -> Dict[str, float]:
         """
-        statistic the average length and position of skeleton
+        Statistic the average length and position of skeleton
         :param landmark_frame: an iterable of namedtuple objects, each object contains the pose landmarks of a frame
         :return: a dictionary with the average length of the skeleton
         """

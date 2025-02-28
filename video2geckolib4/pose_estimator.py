@@ -3,7 +3,7 @@ from pathlib import Path
 import cv2
 import mediapipe as mp
 
-class VideoPoseEstimator:
+class PoseEstimator:
     def __init__(self, *args, **kwargs):
         self.mp_pose = mp.solutions.pose
         self.pose = self.mp_pose.Pose(*args, **kwargs)
@@ -13,9 +13,9 @@ class VideoPoseEstimator:
 
     def auto_estimate(self, video_path: str | Path) -> Tuple[List[NamedTuple], List[NamedTuple]]:
         """
-        estimate pose for all frames in given video path
-        :param video_path:  to video file
-        :return: pose estimation result for all frames
+        Estimate pose for all frames in given video path
+        :param video_path: to video file
+        :return: pose estimation result for given timestamps, (pose_world_landmarks, pose_landmarks)
         """
         cap = cv2.VideoCapture(video_path)
         frame_cnt = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))   # 总帧数
@@ -72,4 +72,18 @@ class VideoPoseEstimator:
             world_pose_frames.append(results.pose_world_landmarks.landmark)
             pose_frames.append(results.pose_landmarks.landmark)
         cap.release()
+        return world_pose_frames, pose_frames
+
+    def estimate_pictures(self, pictures: Iterable[str | Path]) -> Tuple[List[NamedTuple], List[NamedTuple]]:
+        """
+        Estimate pose for given pictures
+        :param pictures: path list to pictures
+        :return: pose estimation result for given pictures, (pose_world_landmarks, pose_landmarks)
+        """
+        world_pose_frames, pose_frames = [], []
+        for p in pictures:
+            pic = cv2.cvtColor(cv2.imread(p), cv2.COLOR_BGR2RGB)
+            results = self.pose.process(pic)
+            world_pose_frames.append(results.pose_world_landmarks.landmark)
+            pose_frames.append(results.pose_landmarks.landmark)
         return world_pose_frames, pose_frames
