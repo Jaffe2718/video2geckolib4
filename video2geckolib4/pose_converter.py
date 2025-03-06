@@ -1,8 +1,8 @@
-from typing import NamedTuple, Iterable, List, Dict
+from typing import NamedTuple, Iterable, List, Dict, Any
 
 import numpy as np
+from numpy import floating
 from scipy.spatial.transform import Rotation as R
-
 
 BONES = ["Body", "Head", "LeftUpperArm", "LeftForearm", "LeftThigh", "LeftCalf", "RightUpperArm", "RightForearm", "RightThigh", "RightCalf"]
 
@@ -38,7 +38,7 @@ def _v(landmarks: NamedTuple, _from: int, _to: int) -> np.ndarray:
     return _p(landmarks, _to) - _p(landmarks, _from)
 
 
-def _dist(landmarks: NamedTuple, _from: int, _to: int) -> float:
+def _dist(landmarks: NamedTuple, _from: int, _to: int) -> floating[Any]:
     return np.linalg.norm(_p(landmarks, _from) - _p(landmarks, _to))
 
 
@@ -51,7 +51,11 @@ def _euler_angles(rot_mat: np.ndarray) -> List[float]:
     We use a rotation matrix to calculate the euler angles. X -> pitch, Y -> yaw, Z -> roll. In Blockbench, the rotation
     order is Z(roll) -> Y(yaw) -> X(pitch).
 
-    :param rot_mat: rotation matrix (3x3), each row is identity vector [rx, ry, rz]
+    -180 <= pitch <= 180
+    -90 <= yaw <= 90
+    -180 <= roll <= 180
+
+    :param rot_mat: rotation matrix (3x3), each col is identity vector [rx, ry, rz]
     :return: [Pitch, Yaw, Roll] (degrees)
     """
     r = R.from_matrix(rot_mat)
@@ -61,9 +65,9 @@ def _euler_angles(rot_mat: np.ndarray) -> List[float]:
 def _rel(cood_sys: np.ndarray, points: np.ndarray) -> np.ndarray:
     """
     calculate relative coordinate
-    :param cood_sys:  system matrix (3x3), each row is identity vector [rx, ry, rz]
-    :param points: nx3 matrix, each row is a point [x, y, z]
-    :return: nx3 matrix, each row is a point [x, y, z] in relative coordinate
+    :param cood_sys:  system matrix (3x3), each col is identity vector [rx, ry, rz]
+    :param points: nx3 matrix, each col is a point [x, y, z]
+    :return: nx3 matrix, each col is a point [x, y, z] in relative coordinate
     """
     return cood_sys.T @ points
 
@@ -130,7 +134,7 @@ class PoseConverter:
 
         # LeftThigh (rel to Body)
         left_thigh_y = _v(lm, 25, 23)
-        left_thigh_z = np.cross(left_forearm_y, _v(lm, 24, 23))
+        left_thigh_z = np.cross(left_thigh_y, _v(lm, 24, 23))
         left_thigh_x = np.cross(left_thigh_y, left_thigh_z)
         left_thigh_sys = np.vstack([_normalize(left_thigh_x), _normalize(left_thigh_y), _normalize(left_thigh_z)]).T
         ans["LeftThigh"] = _euler_angles(_rel(body_sys, left_thigh_sys))
@@ -208,10 +212,10 @@ class PoseConverter:
         return pose_frames
 
     @staticmethod
-    def statistic_skeleton(landmark_frames: Iterable[NamedTuple]) -> Dict[str, float]:
+    def statistic_skeleton(landmark_frames: Iterable[NamedTuple]) -> dict[str, floating[Any]]:
         """
         Statistic the average length and position of skeleton
-        :param landmark_frame: an iterable of namedtuple objects, each object contains the pose landmarks of a frame
+        :param landmark_frames: an iterable of namedtuple objects, each object contains the pose landmarks of a frame
         :return: a dictionary with the average length of the skeleton
         """
         data = {}

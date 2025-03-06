@@ -3,7 +3,7 @@ import os
 
 setup(
     name='video2geckolib4',
-    version='0.2.0',
+    version='0.2.1',
     author='Jaffe2718',
     author_email='qqyttwqeei@163.com',
     description='A package for converting video poses to GeckoLib4 animations',
